@@ -1,0 +1,85 @@
+# MrGardenr CMS Architecture Plan (Updated)
+
+Based on your feedback, I have refined the architectural plan for the CMS to ensure it aligns perfectly with your goals.
+
+## 1. Repository Strategy (The "Polyrepo" Approach)
+
+> **Your Comment:** *"Make another folder Outside the main website folder, or keeping both at same place will be feasible? suggest"*
+
+**My Suggestion:** Since we are building a **Custom Node.js Backend**, keeping the CMS in a completely separate folder **OUTSIDE** your main website folder is the most feasible and professional approach. 
+
+**Why keeping them separate is better:**
+- **Zero Risk:** Your main website is completely isolated. There is 0% chance that installing a backend database package will break your frontend Vite build.
+- **Security & Hosting:** You will likely host your static website on Vercel/Netlify, but host your Custom Node.js Auth Backend on a server like Render, Railway, or Heroku. Having them separate makes deployment much easier.
+- **Cleaner Workspace:** You avoid massive, messy `package.json` files and dependency conflicts.
+
+*We will create a brand new folder (e.g., `MrGardenr_CMS`) next to your `MrGardenr v1 Draft` folder to build this.*
+
+---
+
+## 2. Custom Authentication & Backend System
+
+> **Your Comment:** *"Can't we make a custom Authentication system?"*
+
+Absolutely! If you prefer to own the entire authentication flow rather than relying on Firebase, we can build a custom system.
+
+**Proposed Custom Auth Stack:**
+- **Backend Framework:** Node.js with Express.js.
+- **Database Recommendation: MongoDB (via MongoDB Atlas)** 
+  - *Why it's preferable and more user-friendly:* For a CMS where data structures (like blog posts or flexible service pages) change frequently, a NoSQL database like MongoDB is much more forgiving than a strict SQL database like PostgreSQL. MongoDB Atlas provides a beautiful, user-friendly web interface to view your data, and it has a fantastic free tier.
+- **Authentication:** **JSON Web Tokens (JWT)** + bcrypt for password hashing.
+- **How it works:** 
+  1. We'll build an API (`/api/login`) that verifies email/password.
+  2. It generates a secure JWT token stored in an `httpOnly` cookie.
+  3. All CMS actions (like creating a blog) will require this token to ensure only authorized admins can make changes.
+
+## 3. Confirmed CMS Features
+
+As requested, the following premium features are **approved** and will be built into the CMS:
+
+1. **Live Preview Mode:** A split-screen or toggle allowing you to see exactly how the changes will look before hitting "Publish".
+2. **Draft & Publish States:** Save content as a "Draft" to work on later without it going live immediately.
+3. **Advanced Media Library:** A centralized image manager to upload, preview, and select images. (Since we are building a custom backend, we can store images on AWS S3, Cloudinary, or even locally to start).
+4. **Rich Text Editor:** Integration of TipTap or Quill for beautiful blog formatting.
+
+---
+
+## 4. Proposed Folder Structure (Separate Workspaces)
+
+```text
+📁 Downloads/
+├── 📁 MrGardenr v1 Draft/  (Your CURRENT main website - Untouched)
+│
+└── 📁 MrGardenr_CMS/       (The NEW CMS Workspace)
+    ├── 📁 frontend/        (The React/Vite Admin UI)
+    │   ├── src/pages/      (Login, Dashboard, Media Manager)
+    │   └── src/components/ (UI elements)
+    └── 📁 backend/         (The Custom Node.js Auth & API Server)
+        ├── controllers/    (Auth logic, Content logic)
+        ├── models/         (Database schemas: User, BlogPost)
+        └── routes/         (API endpoints)
+```
+
+---
+
+## 5. Deployment Strategy
+
+When we are ready to go live, here is the exact deployment plan for this architecture:
+
+1. **The Main Website (Vite/React):** 
+   - Hosted on **Vercel** or **Netlify**. Both offer seamless GitHub integration and global CDNs for lightning-fast loading.
+2. **The CMS Frontend (React Admin Panel):** 
+   - Also hosted on **Vercel** or **Netlify** as a separate project (e.g., `admin.mrgardenr.in`).
+3. **The Custom CMS Backend (Node.js API):** 
+   - Hosted on **Render.com** or **Railway.app**. These are the most modern, developer-friendly platforms for hosting custom Node.js servers, offering automatic deployments on git push.
+4. **The Database:** 
+   - Hosted on **MongoDB Atlas**, a fully managed cloud database with an excellent interface and an generous free tier.
+
+---
+
+## Final Review & Next Steps
+
+> [!IMPORTANT]
+> The architectural plan is now fully fleshed out! If you are happy with this setup (MongoDB, Custom JWT Auth, Polyrepo structure, and the deployment strategy), give me the green light! 
+> 
+> **Next step upon approval:** I will initialize the `MrGardenr_CMS` repository with the frontend and backend skeleton.
