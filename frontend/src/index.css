@@ -19,7 +19,7 @@
   }
 }
 
-/* ─── Animations ─── */
+/* Animations */
 
 .spin {
   animation: spin 1s linear infinite;
@@ -52,7 +52,7 @@
 .animate-float-3 { animation: float-leaf 18s ease-in-out infinite 2s; }
 .animate-slow-pulse { animation: slow-pulse 8s ease-in-out infinite; }
 
-/* ─── Login Page (dark theme, self-contained) ─── */
+/* Login Page (dark theme, self-contained) */
 
 .login-page {
   background: linear-gradient(135deg, #061810, #020805, #040f0a);
@@ -116,7 +116,7 @@
   transform: none;
 }
 
-/* ─── Loading Screen ─── */
+/* Loading Screen */
 
 .loading-screen {
   min-height: 100vh;
@@ -126,7 +126,7 @@
   background-color: #FAFAFA;
 }
 
-/* ─── Glow effect for logo container ─── */
+/* Glow effect for logo container */
 
 .glow-effect {
   position: relative;
