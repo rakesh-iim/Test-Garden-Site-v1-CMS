@@ -4,14 +4,31 @@ const cors = require('cors');
 const path = require('path');
 const { validateEnv, env } = require('./config/env');
 const { initializeStore } = require('./services/dataStore');
+const { createRateLimiter, requireJsonBody, securityHeaders } = require('./middleware/security');
+const { errorHandler } = require('./middleware/errorHandler');
 
 validateEnv();
 
 const app = express();
+app.disable('x-powered-by');
 
 // Middleware
+app.use(securityHeaders);
 app.use(cors({ origin: env.corsOrigin }));
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
+app.use('/api/auth', createRateLimiter({
+  name: 'auth',
+  maxRequests: env.authRateLimitMax,
+  windowMs: env.authRateLimitWindowMs,
+  message: 'Too many authentication attempts. Please try again later.',
+}));
+app.use(['/api/content', '/api/upload'], createRateLimiter({
+  name: 'writes',
+  maxRequests: env.writeRateLimitMax,
+  windowMs: env.writeRateLimitWindowMs,
+  message: 'Too many requests to CMS write endpoints. Please try again later.',
+}));
+app.use(['/api/auth', '/api/content', '/api/public'], requireJsonBody);
 
 // Basic Route
 app.get('/', (req, res) => {
@@ -31,7 +48,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  fallthrough: false,
+  index: false,
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  },
+}));
+app.use(errorHandler);
 
 // Storage connection
 initializeStore()

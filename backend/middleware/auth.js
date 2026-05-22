@@ -7,8 +7,8 @@ exports.protect = async (req, res, next) => {
     let token;
     
     // 1) Get token and check if it's there
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.slice(7).trim();
     }
     
     if (!token) {

@@ -29,21 +29,36 @@ const sendTokenResponse = (user, statusCode, res) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    const normalizedName = String(name || '').trim();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedPassword = String(password || '');
+
+    if (!normalizedName || !normalizedEmail || !normalizedPassword) {
+      return res.status(400).json({ status: 'fail', message: 'Name, email, and password are required.' });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ status: 'fail', message: 'Invalid email address.' });
+    }
+
+    if (normalizedPassword.length < 8) {
+      return res.status(400).json({ status: 'fail', message: 'Password must be at least 8 characters long.' });
+    }
 
     if (!['admin', 'editor'].includes(role || 'admin')) {
       return res.status(400).json({ status: 'fail', message: 'Invalid role' });
     }
 
     // Check if user already exists
-    const existingUser = await findUserByEmail(email);
+    const existingUser = await findUserByEmail(normalizedEmail);
     if (existingUser) {
       return res.status(400).json({ status: 'fail', message: 'Email already exists' });
     }
 
     const newUser = await createUser({
-      name,
-      email,
-      password,
+      name: normalizedName,
+      email: normalizedEmail,
+      password: normalizedPassword,
       role: role || 'admin'
     });
 
@@ -56,16 +71,18 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedPassword = String(password || '');
 
     // 1) Check if email and password exist
-    if (!email || !password) {
+    if (!normalizedEmail || !normalizedPassword) {
       return res.status(400).json({ status: 'fail', message: 'Please provide email and password' });
     }
 
     // 2) Check if user exists && password is correct
-    const user = await findUserByEmail(email, { includePassword: true });
+    const user = await findUserByEmail(normalizedEmail, { includePassword: true });
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user || !(await user.comparePassword(normalizedPassword))) {
       return res.status(401).json({ status: 'fail', message: 'Incorrect email or password' });
     }
 

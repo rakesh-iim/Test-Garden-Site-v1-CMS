@@ -1,19 +1,59 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, FolderTree, Globe, Image as ImageIcon, Layers3, PencilLine } from 'lucide-react';
+import {
+  Activity,
+  ArrowRight,
+  FolderTree,
+  Globe,
+  Image as ImageIcon,
+  Layers3,
+  PencilLine,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from 'lucide-react';
 import { CMSLayout } from '../components/CMSLayout';
 import { editorNodes, siteTree } from '../config/siteTree';
+import { useAuth } from '../hooks/useAuth';
 
 const folderCount = (nodes: typeof siteTree): number =>
   nodes.reduce((total, node) => total + (node.type === 'folder' ? 1 + folderCount(node.children) : 0), 0);
 
 export const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const firstInitial = user?.name?.trim()?.charAt(0)?.toUpperCase() || 'A';
+  const secondInitial = user?.name?.trim()?.split(/\s+/)?.[1]?.charAt(0)?.toUpperCase() || '';
+  const initials = `${firstInitial}${secondInitial}`.trim();
 
   const stats = [
     { label: 'Editable nodes', value: String(editorNodes.length), icon: PencilLine, tone: 'bg-emerald-50 text-emerald-700' },
     { label: 'Tree folders', value: String(folderCount(siteTree)), icon: FolderTree, tone: 'bg-blue-50 text-blue-700' },
     { label: 'Global groups', value: '2', icon: Globe, tone: 'bg-amber-50 text-amber-700' },
     { label: 'Media tools', value: '1', icon: ImageIcon, tone: 'bg-purple-50 text-purple-700' },
+  ];
+
+  const statusItems = [
+    {
+      label: 'API access',
+      value: 'Protected',
+      detail: 'CMS write endpoints require authenticated users.',
+      icon: ShieldCheck,
+      tone: 'text-emerald-600 bg-emerald-50',
+    },
+    {
+      label: 'Public site',
+      value: 'Connected',
+      detail: 'Content tree mirrors the published website structure.',
+      icon: Activity,
+      tone: 'text-blue-600 bg-blue-50',
+    },
+    {
+      label: 'Workspace mode',
+      value: 'Live draft',
+      detail: 'Changes publish directly into the shared content model.',
+      icon: Sparkles,
+      tone: 'text-amber-600 bg-amber-50',
+    },
   ];
 
   const topEditors = editorNodes.slice(0, 8);
@@ -24,6 +64,7 @@ export const Dashboard = () => {
         <section className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-6">
           <div className="bg-[#0f1512] text-white rounded-2xl p-8 overflow-hidden relative">
             <div className="absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(circle_at_top_right,rgba(127,208,174,0.28),transparent_58%)] pointer-events-none" />
+            <div className="absolute -right-8 -bottom-8 w-48 h-48 rounded-full border border-white/8 bg-white/[0.03]" />
             <div className="relative z-10 max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1.5 text-[12px] uppercase tracking-[0.18em] text-[#9fd9bf] font-semibold">
                 <Layers3 className="w-4 h-4" />
@@ -49,26 +90,66 @@ export const Dashboard = () => {
                   Open Homepage <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
+
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {statusItems.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/8 bg-white/[0.04] px-4 py-4 backdrop-blur-sm">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.tone}`}>
+                      <item.icon className="w-4 h-4" />
+                    </div>
+                    <div className="mt-4 text-[11px] uppercase tracking-[0.18em] text-white/45">{item.label}</div>
+                    <div className="mt-1 text-[16px] font-semibold text-white">{item.value}</div>
+                    <div className="mt-2 text-[12px] leading-relaxed text-white/55">{item.detail}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-5">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.tone}`}>
-                  <stat.icon className="w-5 h-5" />
+          <div className="space-y-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#5BA585] to-[#2f5f49] text-white flex items-center justify-center text-[18px] font-semibold shadow-[0_12px_30px_rgba(91,165,133,0.22)]">
+                  {initials || <UserRound className="w-6 h-6" />}
                 </div>
-                <div className="mt-4 text-[30px] leading-none font-semibold text-gray-900">{stat.value}</div>
-                <div className="mt-2 text-[13px] text-gray-500">{stat.label}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[12px] uppercase tracking-[0.18em] text-gray-400">Signed In As</div>
+                  <div className="mt-2 text-[24px] leading-none font-semibold text-gray-900 truncate">{user?.name || 'Admin'}</div>
+                  <div className="mt-2 text-[13px] text-gray-500 break-all">{user?.email || 'admin@example.com'}</div>
+                  <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#5BA585]/10 text-[#3f7a60] px-3 py-1.5 text-[12px] font-semibold uppercase tracking-[0.16em]">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    {user?.role || 'admin'}
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.tone}`}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <div className="mt-4 text-[30px] leading-none font-semibold text-gray-900">{stat.value}</div>
+                  <div className="mt-2 text-[13px] text-gray-500">{stat.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-6">
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h3 className="text-[16px] font-semibold text-gray-900">Tree coverage</h3>
-            <p className="mt-2 text-[13px] text-gray-500">The primary website structure is now represented directly in the CMS navigation.</p>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-[16px] font-semibold text-gray-900">Tree coverage</h3>
+                <p className="mt-2 text-[13px] text-gray-500">The primary website structure is now represented directly in the CMS navigation.</p>
+              </div>
+              <div className="rounded-xl bg-[#f4f7f4] border border-gray-200 px-3 py-2 text-right shrink-0">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-gray-400">Coverage</div>
+                <div className="text-[20px] leading-none font-semibold text-gray-900 mt-1">100%</div>
+              </div>
+            </div>
             <div className="mt-5 space-y-3">
               {siteTree.map((node) => (
                 <div key={node.id} className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/70 px-4 py-3">
@@ -89,6 +170,10 @@ export const Dashboard = () => {
               <div>
                 <h3 className="text-[16px] font-semibold text-gray-900">Top editors</h3>
                 <p className="mt-2 text-[13px] text-gray-500">Jump into the most important surfaces for the public site.</p>
+              </div>
+              <div className="hidden md:inline-flex items-center gap-2 rounded-full bg-[#5BA585]/8 px-3 py-1.5 text-[12px] font-medium text-[#4a8a6e]">
+                <Activity className="w-3.5 h-3.5" />
+                Recommended first edits
               </div>
             </div>
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">

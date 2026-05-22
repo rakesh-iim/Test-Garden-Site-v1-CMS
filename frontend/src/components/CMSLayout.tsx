@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle2, ChevronDown, ChevronRight, Folder, LayoutDashboard, Loader2, Save } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronRight, Folder, LayoutDashboard, Loader2, LogOut, Save } from 'lucide-react';
 import { siteTree, type TreeNode } from '../config/siteTree';
+import { useAuth } from '../hooks/useAuth';
 
 interface CMSLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export const CMSLayout: React.FC<CMSLayoutProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, user } = useAuth();
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({
     global: true,
     pages: true,
@@ -131,6 +133,10 @@ export const CMSLayout: React.FC<CMSLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 text-[12px] text-gray-500">
+              <span className="font-medium text-gray-700">{user?.name}</span>
+              <span className="uppercase tracking-wide">{user?.role}</span>
+            </div>
             {saveSuccess ? (
               <span className="text-[#5BA585] flex items-center gap-1.5 text-[13px] font-medium">
                 <CheckCircle2 className="w-4 h-4" /> Published
@@ -146,6 +152,16 @@ export const CMSLayout: React.FC<CMSLayoutProps> = ({
                 Publish
               </button>
             ) : null}
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login', { replace: true });
+              }}
+              className="h-9 px-4 rounded-lg border border-gray-200 text-gray-600 hover:text-gray-900 hover:border-gray-300 text-[13px] font-medium inline-flex items-center gap-2 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
           </div>
         </header>
 

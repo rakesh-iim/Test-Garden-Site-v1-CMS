@@ -7,6 +7,14 @@ const { findContentByPageId, upsertContentByPageId } = require('../services/data
 exports.getContent = async (req, res) => {
   try {
     const { pageId } = req.params;
+    const errors = validatePageContent(pageId, {});
+    if (errors[0]?.startsWith('Unsupported pageId')) {
+      return res.status(404).json({
+        status: 'fail',
+        message: errors[0],
+      });
+    }
+
     const content = await findContentByPageId(pageId);
     
     if (!content) {
@@ -33,6 +41,14 @@ exports.getContent = async (req, res) => {
 exports.updateContent = async (req, res) => {
   try {
     const { pageId } = req.params;
+
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Content payload must be a JSON object.',
+      });
+    }
+
     const errors = validatePageContent(pageId, req.body);
     if (errors.length > 0) {
       return res.status(400).json({

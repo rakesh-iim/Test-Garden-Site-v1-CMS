@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const auth = require('../middleware/auth');
 
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, '../uploads');
@@ -23,7 +24,8 @@ const storage = multer.diskStorage({
 
 // File filter (images only)
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
+  const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+  if (allowedMimeTypes.has(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Only image files are allowed!'), false);
@@ -35,6 +37,9 @@ const upload = multer({
   fileFilter: fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
+
+router.use(auth.protect);
+router.use(auth.restrictTo('admin', 'editor'));
 
 // Upload route (Single image)
 router.post('/', upload.single('image'), (req, res) => {
@@ -64,7 +69,7 @@ router.get('/', (req, res) => {
       }
       
       const fileUrls = files
-        .filter(file => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file))
+        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
         .map(file => ({
           filename: file,
           url: `${req.protocol}://${req.get('host')}/uploads/${file}`

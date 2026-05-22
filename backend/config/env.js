@@ -33,5 +33,9 @@ module.exports = {
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,
     corsOrigin: getCorsOrigin(),
     useInMemoryDb,
+    authRateLimitMax: Number(process.env.AUTH_RATE_LIMIT_MAX || 10),
+    authRateLimitWindowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+    writeRateLimitMax: Number(process.env.WRITE_RATE_LIMIT_MAX || 120),
+    writeRateLimitWindowMs: Number(process.env.WRITE_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
   },
 };

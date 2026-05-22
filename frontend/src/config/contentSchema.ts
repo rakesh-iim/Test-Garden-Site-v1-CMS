@@ -51,6 +51,14 @@ const serviceDetailFields = (
   heroDescription: string,
   highlightPlaceholder: string
 ): EditorField[] => [
+  text('meta_title', 'Meta title', heroTitle),
+  textarea('meta_description', 'Meta description', heroDescription),
+  text('hero_image', 'Hero image URL', '/images/service-hero.webp'),
+  text('hero_image_alt', 'Hero image alt text', heroTitle),
+  text('intro_image', 'Intro image URL', '/images/project-1.webp'),
+  text('intro_image_alt', 'Intro image alt text', `${heroTitle} details`),
+  text('challenges_image', 'Challenges image URL', '/images/project-2.webp'),
+  text('challenges_image_alt', 'Challenges image alt text', `${heroTitle} challenges`),
   text('breadcrumb_label', 'Breadcrumb label', heroTitle),
   text('hero_title', 'Hero title', heroTitle),
   textarea('hero_description', 'Hero description', heroDescription),
@@ -82,6 +90,7 @@ const serviceDetailFields = (
 
 export const pageFieldSets: Record<PageId, EditorField[]> = {
   global_navigation: [
+    text('logoSrc', 'Logo image URL', '/logo.webp'),
     text('logoAlt', 'Logo alt text', 'MrGardenr logo'),
     text('ctaLabel', 'Primary CTA label', 'Book a Visit'),
     text('ctaPath', 'Primary CTA path', '/booking'),
@@ -97,6 +106,8 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
     ),
   ],
   global_footer: [
+    text('logoSrc', 'Logo image URL', '/logo.webp'),
+    text('logoAlt', 'Logo alt text', 'MrGardenr logo'),
     text('copyrightText', 'Copyright text', '© 2026 MrGardenr.'),
     text('contactCtaLabel', 'Footer CTA label', 'Contact Us'),
     text('contactCtaPath', 'Footer CTA path', '/contact'),
@@ -122,10 +133,13 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
     textarea('expertise_description', 'Expertise section description', 'Comprehensive landscaping solutions...'),
     text('projects_title', 'Projects section title', 'Landscapes in Action'),
     textarea('projects_description', 'Projects section description', 'Selected transformations and recent work.'),
+    text('projects_cta_label', 'Projects CTA label', 'See all projects'),
     text('testimonials_title', 'Testimonials section title', 'Client Stories'),
     textarea('testimonials_description', 'Testimonials section description', 'See what our clients have to say...'),
     text('about_title', 'Consultation title', 'Cultivate your perfect space.'),
     textarea('about_text', 'Consultation description', 'Ready to bring breathing room...'),
+    textarea('consultation_quote', 'Consultation quote', 'The team completely transformed our space into a lush oasis.'),
+    text('consultation_quote_author', 'Consultation quote author', 'Sarah Jenkins'),
     collection('consultation_features', 'Consultation features', 'Feature', [
       { key: 'text', label: 'Feature text', type: 'text', placeholder: 'Personalized styling advice' },
     ]),
@@ -134,6 +148,22 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
       { key: 'name', label: 'Client name', type: 'text', placeholder: 'Sarah Jenkins' },
       { key: 'location', label: 'Location', type: 'text', placeholder: 'The Oaks' },
       { key: 'avatar', label: 'Avatar URL', type: 'text', placeholder: '/images/avatar-1.webp' },
+    ]),
+  ],
+  homepage_process: [
+    text('section_title', 'Section title', 'How it works'),
+    text('cta_label', 'CTA label', 'Book A Free Consultation'),
+    text('cta_path', 'CTA path', '/booking'),
+    collection('steps', 'Process steps', 'Step', [
+      { key: 'icon', label: 'Icon key', type: 'text', placeholder: 'calendar-check' },
+      { key: 'text', label: 'Step text', type: 'text', placeholder: 'Book an appointment' },
+    ]),
+  ],
+  homepage_clients: [
+    text('section_title', 'Section title', 'Designed for workplaces of every scale'),
+    collection('clients', 'Client list', 'Client', [
+      { key: 'name', label: 'Name', type: 'text', placeholder: 'KAYA' },
+      { key: 'sublabel', label: 'Sublabel', type: 'text', placeholder: 'THE NETHERLANDS' },
     ]),
   ],
   about: [
@@ -193,6 +223,8 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
     text('hero_eyebrow', 'Hero eyebrow', 'Gallery'),
     text('hero_title', 'Hero title', 'Recent Transformations'),
     textarea('hero_description', 'Hero description', 'A glimpse into the lush, vibrant environments...'),
+    text('instagram_username', 'Instagram username', 'mrgardenr'),
+    text('whatsapp_number', 'WhatsApp share number', '919876543210'),
     collection('portfolioItems', 'Portfolio items', 'Portfolio item', [
       { key: 'id', label: 'Item id', type: 'text', placeholder: 'oasis-estate' },
       { key: 'title', label: 'Title', type: 'text', placeholder: 'The Oasis Estate' },
@@ -222,6 +254,9 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
     text('headerTitle', 'Hero title', "Let's Cultivate Something Beautiful"),
     text('leadgen_title', 'Lead form title', 'Start Your Project Today'),
     textarea('leadgen_description', 'Lead form description', 'Ready to bring breathing room and lush vitality...'),
+    text('locations_eyebrow', 'Locations eyebrow', 'Find Us'),
+    text('locations_title', 'Locations section title', 'Our Store Locations'),
+    textarea('locations_description', 'Locations section description', 'Visit us at any of our offices across India for a personalized consultation.'),
     collection('leadgen_features', 'Lead form features', 'Feature', [
       { key: 'text', label: 'Feature text', type: 'text', placeholder: 'Customized Design Plans' },
     ]),
@@ -240,8 +275,40 @@ export const pageFieldSets: Record<PageId, EditorField[]> = {
   booking: [
     text('hero_title', 'Hero title', 'Start Your Project Today'),
     textarea('hero_description', 'Hero description', 'Ready to bring breathing room and lush vitality...'),
+    text('form_title', 'Booking form title', 'Expert Landscape Consultation'),
+    text('service_label', 'Service label', 'Expert Landscape Consultation'),
+    text('price', 'Current price', '499'),
+    text('original_price', 'Original price', '999'),
+    text('discount_badge', 'Discount badge', '50% OFF'),
+    textarea('summary_description', 'Booking summary description', 'Get precise measurements and personalized landscaping and styling advice from our experts right at your property.'),
+    text('success_title', 'Success title', 'Booking Confirmed'),
+    textarea('success_message', 'Success message', 'Thank you! Our experts will visit you on your selected slot.'),
     collection('features', 'Booking features', 'Feature', [
       { key: 'text', label: 'Feature text', type: 'text', placeholder: 'Professional Execution' },
+    ]),
+    collection('cities', 'Available cities', 'City', [
+      { key: 'label', label: 'City name', type: 'text', placeholder: 'Ahmedabad' },
+    ]),
+    collection('property_types', 'Property types', 'Property type', [
+      { key: 'label', label: 'Property type', type: 'text', placeholder: 'Terrace/Rooftop' },
+    ]),
+    collection('time_slots', 'Time slots', 'Time slot', [
+      { key: 'label', label: 'Time slot', type: 'text', placeholder: '10:00 AM - 12:00 PM' },
+    ]),
+  ],
+  floating_contact: [
+    text('whatsapp_url', 'WhatsApp URL', 'https://wa.me/1234567890'),
+    text('whatsapp_label', 'WhatsApp aria label', 'Contact on WhatsApp'),
+    text('phone_href', 'Phone link', 'tel:+919876543210'),
+    text('phone_label', 'Phone aria label', 'Call Us'),
+  ],
+  service_testimonials: [
+    text('background_image', 'Background image URL', '/images/service-terrace.webp'),
+    collection('testimonials', 'Testimonials', 'Testimonial', [
+      { key: 'text', label: 'Quote', type: 'textarea', placeholder: 'Their team handled our penthouse terrace with incredible professionalism.' },
+      { key: 'name', label: 'Name', type: 'text', placeholder: 'David Chen' },
+      { key: 'title', label: 'Role/title', type: 'text', placeholder: 'Homeowner' },
+      { key: 'image', label: 'Avatar URL', type: 'text', placeholder: 'https://i.pravatar.cc/150?u=david_chen' },
     ]),
   ],
   privacy: [
