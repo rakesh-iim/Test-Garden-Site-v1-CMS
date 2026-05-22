@@ -1,58 +1,65 @@
 const express = require('express');
-const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const sharp = require('sharp');
 const auth = require('../middleware/auth');
+const { createMedia, listMedia, findMediaById, deleteMediaById } = require('../services/dataStore');
+const { uploadMediaObject, deleteMediaObject } = require('../services/objectStorage');
 
-// Ensure uploads folder exists
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const router = express.Router();
 
-// Multer storage config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// File filter (images only)
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
   if (allowedMimeTypes.has(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed!'), false);
+    cb(new Error('Only JPEG, PNG, GIF, and WEBP image files are allowed.'), false);
   }
 };
 
-const upload = multer({ 
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+const upload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 router.use(auth.protect);
 router.use(auth.restrictTo('admin', 'editor'));
 
-// Upload route (Single image)
-router.post('/', upload.single('image'), (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ status: 'fail', message: 'No file uploaded' });
     }
-    
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+
+    const metadata = await sharp(req.file.buffer).metadata();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const storedObject = await uploadMediaObject({ file: req.file, baseUrl });
+
+    const media = await createMedia({
+      filename: req.file.originalname,
+      storageKey: storedObject.storageKey,
+      url: storedObject.url,
+      provider: storedObject.provider,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      width: metadata.width,
+      height: metadata.height,
+      uploadedBy: req.user?._id,
+    });
+
     res.status(200).json({
       status: 'success',
-      url: fileUrl,
-      filename: req.file.filename
+      data: {
+        id: String(media._id || media.id),
+        filename: media.filename,
+        url: media.url,
+        provider: media.provider,
+        mimeType: media.mimeType,
+        size: media.size,
+        width: media.width,
+        height: media.height,
+        createdAt: media.createdAt,
+      },
     });
   } catch (error) {
     console.error('Upload route error:', error);
@@ -60,25 +67,22 @@ router.post('/', upload.single('image'), (req, res) => {
   }
 });
 
-// Get all uploaded images
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    fs.readdir(uploadDir, (err, files) => {
-      if (err) {
-        return res.status(500).json({ status: 'error', message: 'Unable to scan uploads directory' });
-      }
-      
-      const fileUrls = files
-        .filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
-        .map(file => ({
-          filename: file,
-          url: `${req.protocol}://${req.get('host')}/uploads/${file}`
-        }));
-        
-      res.status(200).json({
-        status: 'success',
-        data: fileUrls
-      });
+    const mediaFiles = await listMedia();
+    res.status(200).json({
+      status: 'success',
+      data: mediaFiles.map((file) => ({
+        id: String(file._id || file.id),
+        filename: file.filename,
+        url: file.url,
+        provider: file.provider,
+        mimeType: file.mimeType,
+        size: file.size,
+        width: file.width,
+        height: file.height,
+        createdAt: file.createdAt,
+      })),
     });
   } catch (error) {
     console.error('Get uploads error:', error);
@@ -86,20 +90,17 @@ router.get('/', (req, res) => {
   }
 });
 
-// Delete image route
-router.delete('/:filename', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const { filename } = req.params;
-    // Basic path traversal protection
-    const sanitizedFilename = path.basename(filename);
-    const filePath = path.join(uploadDir, sanitizedFilename);
-    
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      res.status(200).json({ status: 'success', message: 'File deleted successfully' });
-    } else {
-      res.status(404).json({ status: 'fail', message: 'File not found' });
+    const media = await findMediaById(req.params.id);
+    if (!media) {
+      return res.status(404).json({ status: 'fail', message: 'File not found' });
     }
+
+    await deleteMediaObject(media.storageKey, media.provider);
+    await deleteMediaById(req.params.id);
+
+    res.status(200).json({ status: 'success', message: 'File deleted successfully' });
   } catch (error) {
     console.error('Delete upload error:', error);
     res.status(500).json({ status: 'error', message: 'Server error deleting upload' });

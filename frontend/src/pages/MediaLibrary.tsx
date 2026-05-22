@@ -7,8 +7,11 @@ import {
 } from 'lucide-react';
 
 interface MediaFile {
+  id: string;
   filename: string;
   url: string;
+  provider?: string;
+  size?: number;
 }
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -134,13 +137,13 @@ export const MediaLibrary = () => {
   };
 
   // Delete image
-  const handleDelete = async (filename: string) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this image?')) return;
     
     try {
-      const res = await api.delete(`/upload/${filename}`);
+      const res = await api.delete(`/upload/${id}`);
       if (res.data?.status === 'success') {
-        setImages(prev => prev.filter(img => img.filename !== filename));
+        setImages(prev => prev.filter(img => img.id !== id));
       }
     } catch (err: unknown) {
       console.error('Delete error:', err);
@@ -235,7 +238,7 @@ export const MediaLibrary = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {images.map((img, index) => (
               <div 
-                key={img.filename} 
+                key={img.id} 
                 className="group bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 flex flex-col"
               >
                 {/* Thumbnail Preview */}
@@ -269,7 +272,7 @@ export const MediaLibrary = () => {
                       <ExternalLink className="w-4 h-4" />
                     </a>
                     <button 
-                      onClick={() => handleDelete(img.filename)}
+                      onClick={() => handleDelete(img.id)}
                       className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-md"
                       title="Delete image"
                     >
@@ -282,6 +285,9 @@ export const MediaLibrary = () => {
                 <div className="p-3 flex-1 flex flex-col justify-between min-w-0">
                   <p className="text-[12px] font-medium text-gray-700 truncate" title={img.filename}>
                     {img.filename}
+                  </p>
+                  <p className="mt-1 text-[11px] text-gray-400 truncate">
+                    {img.provider === 'r2' ? 'Cloudflare R2' : 'Local storage'}
                   </p>
                   
                   <div className="mt-2.5 flex items-center gap-2">

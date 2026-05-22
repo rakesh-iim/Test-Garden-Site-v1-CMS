@@ -2,11 +2,13 @@ const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Content = require('../models/Content');
+const Media = require('../models/Media');
 const { env } = require('../config/env');
 
 const memoryState = {
   users: [],
   content: new Map(),
+  media: new Map(),
   initialized: false,
 };
 
@@ -129,6 +131,52 @@ const upsertContentByPageId = async (pageId, data) => {
   );
 };
 
+const listMedia = async () => {
+  if (env.useInMemoryDb) {
+    return Array.from(memoryState.media.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  return Media.find().sort({ createdAt: -1 });
+};
+
+const createMedia = async (record) => {
+  if (env.useInMemoryDb) {
+    const id = new mongoose.Types.ObjectId().toString();
+    const media = {
+      _id: id,
+      id,
+      ...record,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    memoryState.media.set(id, media);
+    return media;
+  }
+
+  return Media.create(record);
+};
+
+const findMediaById = async (id) => {
+  if (env.useInMemoryDb) {
+    return memoryState.media.get(String(id)) || null;
+  }
+
+  return Media.findById(id);
+};
+
+const deleteMediaById = async (id) => {
+  if (env.useInMemoryDb) {
+    const media = memoryState.media.get(String(id)) || null;
+    if (media) {
+      memoryState.media.delete(String(id));
+    }
+    return media;
+  }
+
+  return Media.findByIdAndDelete(id);
+};
+
 module.exports = {
   initializeStore,
   closeStore,
@@ -137,4 +185,8 @@ module.exports = {
   createUser,
   findContentByPageId,
   upsertContentByPageId,
+  listMedia,
+  createMedia,
+  findMediaById,
+  deleteMediaById,
 };
