@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 export const ProtectedRoute = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  //const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
